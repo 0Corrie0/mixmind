@@ -221,19 +221,6 @@ ol.steps li::before{
   display:flex;gap:12px;align-items:center;justify-content:space-between;
 }
 
-/* ── assay ──────────────────────────────────────────── */
-.drop{
-  border:1px dashed var(--line);padding:38px 20px;text-align:center;margin-top:22px;
-  cursor:pointer;transition:.2s;
-}
-.drop:hover{border-color:var(--copper)}
-.drop img{max-width:100%;max-height:280px;display:block;margin:0 auto}
-.spinner{
-  width:26px;height:26px;border:1px solid var(--line);border-top-color:var(--copper);
-  border-radius:50%;animation:spin .9s linear infinite;margin:0 auto;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.found{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 
 /* ── misc ───────────────────────────────────────────── */
 .empty{text-align:center;padding:56px 0;color:var(--dim)}
@@ -339,9 +326,7 @@ const S = {
   drink: null,
   servings: 1,
   unit: "ml",
-  shelf: new Set(loadShelf()),
-  assay: { status: "idle", image: null, found: [], error: null },
-  endpoint: store.get("mixmind.endpoint", "")
+  shelf: new Set(loadShelf())
 };
 
 const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
@@ -471,13 +456,11 @@ function viewHome() {
 
   /* entry points */
   const stack = $(`<div class="btn-stack"></div>`);
-  const a = $(`<button class="btn solid wide">Scan your shelf</button>`);
-  a.onclick = () => go("assay");
-  const b = $(`<button class="btn wide">Your shelf · ${n} drink${n === 1 ? "" : "s"} ready now</button>`);
+  const b = $(`<button class="btn solid wide">Your shelf · ${n} drink${n === 1 ? "" : "s"} ready now</button>`);
   b.onclick = () => go("shelf");
   const c = $(`<button class="btn ghost wide">Host mode — batch for a party</button>`);
   c.onclick = () => go("host");
-  stack.append(a, b, c);
+  stack.append(b, c);
   wrap.appendChild(stack);
 
   const inst = installBlock();
@@ -688,154 +671,6 @@ function viewMakeable() {
   return wrap;
 }
 
-/* ── the Assay: photograph your bottles ────────────── */
-
-function viewAssay() {
-  const wrap = $(`<div class="screen"></div>`);
-  const a = S.assay;
-
-  wrap.appendChild($(`<div style="padding-top:6px">
-    <span class="eyebrow">Scan</span>
-    <h2 style="margin-top:10px">Show it what you own</h2>
-    <p class="lede" style="margin:16px 0 0;text-align:left">Photograph your bottles — the shelf, the trolley, the back of the cupboard. It reads the labels and works out what you can pour.</p>
-  </div>`));
-
-  const input = $(`<input type="file" accept="image/*" hidden>`);
-  const zone = $(`<div class="drop" role="button" tabindex="0"></div>`);
-
-  if (a.status === "reading") {
-    zone.innerHTML = `<div class="spinner"></div><p class="fine" style="margin-top:16px">Reading labels…</p>`;
-  } else if (a.image) {
-    zone.appendChild($(`<img src="${a.image}" alt="Your bottles">`));
-  } else {
-    zone.innerHTML = `<span class="eyebrow mut">Tap to take a photo or choose one</span>
-      <p class="fine" style="margin-top:12px">Get the labels facing the camera. Good light beats a good camera.</p>`;
-  }
-  zone.onclick = () => input.click();
-  zone.onkeydown = e => { if (e.key === "Enter") input.click(); };
-  input.onchange = e => { const f = e.target.files[0]; if (f) readBottles(f); };
-  wrap.append(input, zone);
-
-  if (a.error) wrap.appendChild($(`<p class="err">${esc(a.error)}</p>`));
-
-  if (!S.endpoint || a.error) {
-    const ep = $(`<div class="install" style="margin-top:20px">
-      <span class="eyebrow mut">Scan reader</span>
-      <p>${S.endpoint ? "Reader address:" : "The scan needs your reader address (the Cloudflare Worker URL). Paste it once — it's kept on this phone."}</p>
-      <input type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://mixmind-assay.yourname.workers.dev"
-        style="width:100%;padding:12px;background:var(--ink);color:var(--vellum);border:1px solid var(--line);font:inherit;font-size:16px;border-radius:0">
-      <button class="btn ghost wide" style="margin-top:10px">Save address</button>
-    </div>`);
-    const inp = ep.querySelector("input");
-    inp.value = S.endpoint;
-    ep.querySelector("button").onclick = () => {
-      const v = inp.value.trim();
-      if (v && !/^https:\/\//i.test(v)) { S.assay.error = "The address must start with https://"; render(); return; }
-      S.endpoint = v; store.set("mixmind.endpoint", v); S.assay.error = null; render();
-    };
-    wrap.appendChild(ep);
-  }
-
-  if (a.found.length) {
-    const sec = $(`<div class="sec"><span class="eyebrow">Found ${a.found.length} bottle${a.found.length === 1 ? "" : "s"}</span><div class="found"></div></div>`);
-    const box = sec.querySelector(".found");
-    a.found.forEach(it => {
-      const b = $(`<button class="tickbox ${S.shelf.has(it) ? "on" : ""}">${esc(it)}</button>`);
-      b.onclick = () => { S.shelf.has(it) ? S.shelf.delete(it) : S.shelf.add(it); saveShelf(); render(); };
-      box.appendChild(b);
-    });
-    sec.appendChild($(`<p class="fine">Tap to correct anything it got wrong before adding. It reads labels, not minds.</p>`));
-    const go2 = $(`<button class="btn solid wide" style="margin-top:20px">See what you can make</button>`);
-    go2.onclick = () => { a.found.forEach(i => S.shelf.add(i)); saveShelf(); go("makeable"); };
-    sec.appendChild(go2);
-    wrap.appendChild(sec);
-  }
-
-  const man = $(`<button class="btn ghost wide" style="margin-top:26px">Or tick your bottles by hand</button>`);
-  man.onclick = () => go("shelf");
-  wrap.appendChild(man);
-  return wrap;
-}
-
-async function readBottles(file) {
-  S.assay = { status: "reading", image: null, found: [], error: null };
-  render();
-
-  if (!S.endpoint) {
-    S.assay = { status: "idle", image: null, found: [], error: "Add your reader address below first, or tick your bottles by hand." };
-    render(); return;
-  }
-
-  /* Phone photos are 4–12 MB, often HEIC. The API rejects both. Redraw to a ≤1600px JPEG. */
-  const b64 = await new Promise((res, rej) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
-        const c = document.createElement("canvas");
-        c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
-        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
-        res(c.toDataURL("image/jpeg", 0.85));
-      } catch (e) { rej(new Error("Could not read that photo.")); }
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Could not read that photo. Try a different one.")); };
-    img.src = url;
-  }).catch(e => { S.assay = { status: "idle", image: null, found: [], error: e.message }; render(); return null; });
-  if (!b64) return;
-
-  S.assay.image = b64;
-  const data = b64.split(",")[1];
-  const media = "image/jpeg";
-  const known = SHELF_GROUPS.flatMap(g => g.items);
-
-  const prompt = `You are looking at a photograph of someone's drinks shelf.
-
-List every alcoholic bottle, liqueur, mixer, syrup and bitters you can identify from the labels.
-
-Then map each one to the closest entry in this list of known ingredients:
-${known.join(", ")}
-
-Rules:
-- Only include an entry if you can actually see evidence for it in the image. Do not guess at what a home bar usually contains.
-- If a bottle is clearly a spirit but you cannot read the brand, still map it by category (a clear bottle labelled gin maps to "Gin").
-- If nothing in the list fits a bottle you can see, leave it out.
-
-Respond with ONLY a JSON array of matched strings from the list, no preamble, no markdown fences. Example: ["Gin","Campari","Sweet vermouth"]`;
-
-  try {
-    const res = await fetch(S.endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: media, data } },
-            { type: "text", text: prompt }
-          ]
-        }]
-      })
-    });
-    if (!res.ok) throw new Error(`The reader returned ${res.status}. Check the reader address below, or tick your bottles by hand.`);
-    const json = await res.json();
-    const text = (json.content || []).map(c => c.text || "").join("\n").replace(/```json|```/g, "").trim();
-    const arr = JSON.parse(text);
-    const found = arr.filter(x => known.includes(x));
-    S.assay = {
-      status: "done", image: b64, found,
-      error: found.length ? null : "Nothing recognisable in that photo. Try again with the labels facing the camera, or tick your bottles by hand."
-    };
-  } catch (e) {
-    const msg = e instanceof TypeError ? "Could not reach the reader. Check your signal and the reader address below." : e.message;
-    S.assay = { status: "idle", image: b64, found: [], error: msg };
-  }
-  render();
-}
-
 /* ── host mode ─────────────────────────────────────── */
 
 function viewHost() {
@@ -946,7 +781,6 @@ function render() {
       drink: ["Back", () => go(S.base || S.era || S.family ? "results" : "home")],
       shelf: ["Home", () => go("home")],
       makeable: ["Shelf", () => go("shelf")],
-      assay: ["Home", () => go("home")],
       host: ["Home", () => go("home")]
     };
     const [l, fn] = map[S.view] || ["Home", () => go("home")];
@@ -956,7 +790,7 @@ function render() {
 
   const views = {
     home: viewHome, results: viewResults, drink: viewDrink,
-    shelf: viewShelf, makeable: viewMakeable, assay: viewAssay, host: viewHost
+    shelf: viewShelf, makeable: viewMakeable, host: viewHost
   };
   app.appendChild((views[S.view] || viewHome)());
 }

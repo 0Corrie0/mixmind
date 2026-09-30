@@ -22,13 +22,12 @@ A cocktail PWA. Vanilla JavaScript, no build step, no dependencies.
 
 ## Architecture
 
-No framework. State lives in a single object `S`, and `render()` rebuilds the DOM from it. Views are functions returning a DOM node: `viewHome`, `viewResults`, `viewDrink`, `viewShelf`, `viewMakeable`, `viewAssay`, `viewHost`.
+No framework. State lives in a single object `S`, and `render()` rebuilds the DOM from it. Views are functions returning a DOM node: `viewHome`, `viewResults`, `viewDrink`, `viewShelf`, `viewMakeable`, `viewHost`.
 
 Navigate with `go("viewName", { patch })`. That merges the patch into `S`, scrolls to top, and re-renders.
 
 Persistence is `localStorage` only. Keys are namespaced `mixmind.*`:
 - `mixmind.shelf` — JSON array of owned ingredients
-- `mixmind.endpoint` — override for the scan API endpoint
 - `mixmind.hideInstall` — dismissed install prompt
 
 ---
@@ -141,7 +140,7 @@ Signature elements: the segmented brass dial on the home screen, and the corner-
 
 ## Known state / what's outstanding
 
-1. **The scan feature needs a proxy.** `S.endpoint` is empty by default; the Scan screen asks for the Worker URL and stores it in `mixmind.endpoint`. Photos are downscaled to 1600px JPEG before upload. `docs/SCAN-SETUP-CLOUDFLARE.md` has the Worker code. **Never put an API key in client-side files.**
+1. **Shelf scan removed (Sept 2026).** Bottles are ticked by hand. `docs/SCAN-SETUP-CLOUDFLARE.md` is kept only in case it returns; it would need an Anthropic key in a Cloudflare Worker, never in client files.
 2. **No recipe images.** `docs/MIDJOURNEY-PACK.md` has the prompts and the wiring code. The `img.onerror` pattern means images can be added incrementally without breaking the layout.
 3. **Name not trademark-cleared.** MIXMIND has no cocktail-app collision in app store or web search, but USPTO TESS and the UAE registry have not been checked.
 4. `sw.js` is network-first (cache is offline fallback only). Still bump `CACHE` and the `data.js?v=` query when changing assets.

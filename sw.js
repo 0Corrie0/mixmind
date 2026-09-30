@@ -1,4 +1,4 @@
-const CACHE = "mixmind-v2";
+const CACHE = "mixmind-v3";
 const ASSETS = ["./", "./index.html", "./data.js?v=2", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -12,7 +12,7 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const req = e.request;
   const url = new URL(req.url);
-  if (req.method !== "GET" || url.origin !== location.origin) return;   // fonts + scan API go straight to network
+  if (req.method !== "GET" || url.origin !== location.origin) return;   // fonts go straight to network
 
   // Network first: a deploy shows up on the next open. Cache is the offline fallback only.
   e.respondWith(

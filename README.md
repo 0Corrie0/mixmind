@@ -14,6 +14,6 @@ Full walkthrough: `docs/PUT-IT-ONLINE.md`
 ## Docs
 - `CLAUDE.md` — architecture, data schema, test commands. Claude Code reads this automatically
 - `docs/PUT-IT-ONLINE.md` — hosting, click by click
-- `docs/SCAN-SETUP-CLOUDFLARE.md` — makes the shelf-scan feature work
+- `docs/SCAN-SETUP-CLOUDFLARE.md` — archived; the shelf-scan feature was removed
 - `docs/MIDJOURNEY-PACK.md` — every image prompt, plus the licensing traps
 - `docs/BUILD-AND-SELL.md` — pricing, competitors, legal, honest market read
