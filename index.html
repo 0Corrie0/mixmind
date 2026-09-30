@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12100F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MixMind — your second brain behind the bar</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Spectral:ital,wght@0,300;0,400;0,600;1,300&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Spectral:ital,wght@0,300;0,400;0,600;1,300&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+<style>
+:root{
+  --ink:#12100F;
+  --glass:#17201C;
+  --glass-2:#1D2823;
+  --copper:#B87333;
+  --copper-lo:#8A5626;
+  --verdigris:#3E7A6B;
+  --mercury:#CFC9BC;
+  --vellum:#EDE4D0;
+  --dim:#7C776E;
+  --line:rgba(207,201,188,.16);
+  --display:'Bodoni Moda',serif;
+  --body:'Spectral',Georgia,serif;
+  --util:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+  --pad:20px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  color:var(--vellum);
+  font-family:var(--body);
+  font-weight:300;
+  font-size:16px;
+  line-height:1.55;
+  overscroll-behavior-y:none;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(184,115,51,.13), transparent 60%),
+    radial-gradient(90% 60% at 15% 105%, rgba(62,122,107,.10), transparent 62%);
+}
+#app{position:relative;z-index:1;max-width:760px;margin:0 auto;min-height:100dvh}
+
+/* ── type roles ─────────────────────────────────────── */
+.eyebrow{
+  font-family:var(--util);font-size:10px;font-weight:500;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--copper);
+}
+.eyebrow.q{color:var(--verdigris)}
+.eyebrow.mut{color:var(--dim)}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.08}
+h1{font-size:clamp(38px,11vw,58px);letter-spacing:-.01em}
+h2{font-size:clamp(26px,6.5vw,34px)}
+h3{font-size:19px}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ── chrome ─────────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;gap:12px;
+  padding:calc(env(safe-area-inset-top) + 12px) var(--pad) 12px;
+  background:linear-gradient(var(--ink) 72%,rgba(18,16,15,0));
+}
+.back{
+  font-family:var(--util);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);background:none;border:0;padding:8px 0;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.back:hover{color:var(--copper)}
+.back svg{width:14px;height:14px}
+.screen{padding:0 var(--pad) 120px;animation:rise .38s cubic-bezier(.2,.7,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ── hero / still ───────────────────────────────────── */
+.hero{padding:26px 0 8px;text-align:center}
+.mark{width:74px;height:74px;margin:0 auto 18px;display:block}
+.mark .vessel{fill:none;stroke:var(--copper);stroke-width:1.1}
+.mark .inner{fill:none;stroke:var(--verdigris);stroke-width:1}
+.mark .node{fill:var(--verdigris)}
+.mark .drop{fill:var(--copper);transform-origin:30px 30px;animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{
+  0%,100%{opacity:.35;transform:scale(.8)}
+  50%{opacity:1;transform:scale(1.15)}
+}
+.wordmark{font-family:var(--display);font-size:clamp(40px,13vw,64px);letter-spacing:.14em;margin:0 0 6px;padding-left:.14em}
+.tagline{font-family:var(--util);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin:0}
+.lede{color:var(--mercury);font-size:16px;max-width:34ch;margin:22px auto 0;line-height:1.6}
+
+/* ── the dial (signature) ───────────────────────────── */
+.dial-wrap{position:relative;margin:34px auto 0;width:min(340px,86vw);aspect-ratio:1}
+.dial{width:100%;height:100%;display:block}
+.dial .ring{fill:none;stroke:var(--line);stroke-width:1}
+.dial .tick{stroke:var(--copper-lo);stroke-width:1}
+.seg{cursor:pointer}
+.seg path{fill:transparent;transition:fill .25s}
+.seg:hover path,.seg:focus-visible path{fill:rgba(184,115,51,.14)}
+.seg text{
+  font-family:var(--util);font-size:9.4px;font-weight:500;letter-spacing:.14em;
+  fill:var(--mercury);text-transform:uppercase;pointer-events:none;
+}
+.seg:hover text{fill:var(--vellum)}
+.dial-core{
+  position:absolute;inset:30%;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;pointer-events:none;padding:8px;
+}
+.dial-core .n{font-family:var(--display);font-size:30px;line-height:1;color:var(--copper)}
+.dial-core .l{font-family:var(--util);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:7px;max-width:15ch}
+
+/* ── list rows ──────────────────────────────────────── */
+.rows{margin-top:8px;border-top:1px solid var(--line)}
+.row{
+  width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);
+  padding:17px 2px;display:flex;align-items:baseline;gap:14px;cursor:pointer;color:inherit;
+  font-family:inherit;transition:padding-left .2s;
+}
+.row:hover{padding-left:8px}
+.row .idx{font-family:var(--util);font-size:10px;letter-spacing:.16em;color:var(--copper);min-width:26px}
+.row .body{flex:1;min-width:0}
+.row .t{display:block;font-family:var(--display);font-size:20px;line-height:1.15}
+.row .s{display:block;font-size:13.5px;color:var(--dim);margin-top:4px;line-height:1.4}
+.row .meta{font-family:var(--util);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--verdigris);white-space:nowrap}
+
+/* ── buttons & chips ────────────────────────────────── */
+.btn{
+  font-family:var(--util);font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  padding:14px 20px;border:1px solid var(--copper);color:var(--copper);
+  background:transparent;cursor:pointer;transition:.22s;display:inline-block;text-align:center;
+}
+.btn:hover{background:var(--copper);color:var(--ink)}
+.btn.solid{background:var(--copper);color:var(--ink)}
+.btn.solid:hover{background:var(--vellum);border-color:var(--vellum)}
+.btn.ghost{border-color:var(--line);color:var(--mercury)}
+.btn.ghost:hover{border-color:var(--mercury);background:transparent;color:var(--vellum)}
+.btn.wide{display:block;width:100%}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn-stack{display:grid;gap:10px;margin-top:26px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{
+  font-family:var(--util);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  padding:9px 13px;border:1px solid var(--line);color:var(--dim);
+  background:transparent;cursor:pointer;transition:.18s;border-radius:2px;
+}
+.chip:hover{color:var(--vellum);border-color:var(--mercury)}
+.chip.on{border-color:var(--copper);color:var(--copper);background:rgba(184,115,51,.1)}
+
+/* ── recipe: the specimen label ─────────────────────── */
+.label{
+  border:1px solid var(--line);background:linear-gradient(180deg,var(--glass),var(--ink));
+  padding:26px 22px;margin-top:6px;position:relative;
+}
+.label::before,.label::after{
+  content:"";position:absolute;width:12px;height:12px;border:1px solid var(--copper);
+}
+.label::before{top:7px;left:7px;border-right:0;border-bottom:0}
+.label::after{bottom:7px;right:7px;border-left:0;border-top:0}
+.label .spec{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px}
+.label h2{margin:10px 0 8px}
+.label .note{color:var(--mercury);font-style:italic;font-size:15px;line-height:1.55}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:24px}
+.stat{background:var(--ink);padding:13px 12px}
+.stat .k{font-family:var(--util);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.stat .v{font-size:14px;color:var(--vellum);margin-top:5px;line-height:1.35}
+
+.sec{margin-top:34px}
+.sec > .eyebrow{display:block;margin-bottom:14px}
+
+table.ing{width:100%;border-collapse:collapse}
+table.ing td{padding:11px 0;border-bottom:1px solid var(--line);vertical-align:baseline}
+table.ing td.a{
+  text-align:right;font-family:var(--util);font-size:13px;color:var(--copper);
+  white-space:nowrap;padding-left:16px;font-variant-numeric:tabular-nums;
+}
+table.ing tr.dim td{color:var(--dim)}
+
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0}
+ol.steps li{counter-increment:s;padding:0 0 16px 40px;position:relative;line-height:1.6}
+ol.steps li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:0;top:1px;
+  font-family:var(--util);font-size:10px;letter-spacing:.1em;color:var(--copper);
+}
+.tip{border-left:2px solid var(--verdigris);padding:2px 0 2px 16px;margin-top:22px;color:var(--mercury);font-size:14.5px;line-height:1.6}
+
+/* ── scaler ─────────────────────────────────────────── */
+.scaler{display:flex;align-items:center;gap:2px;border:1px solid var(--line);width:fit-content}
+.scaler button{
+  width:40px;height:38px;background:none;border:0;color:var(--copper);
+  font-family:var(--util);font-size:16px;cursor:pointer;
+}
+.scaler button:hover{background:rgba(184,115,51,.14)}
+.scaler .n{
+  min-width:66px;text-align:center;font-family:var(--util);font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--vellum);
+}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:18px}
+
+/* ── shelf ──────────────────────────────────────────── */
+.shelf-group{margin-top:28px}
+.shelf-items{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tickbox{
+  font-family:var(--util);font-size:11px;letter-spacing:.06em;
+  padding:9px 13px;border:1px solid var(--line);color:var(--dim);
+  background:transparent;cursor:pointer;transition:.16s;border-radius:2px;
+}
+.tickbox:hover{color:var(--vellum);border-color:var(--mercury)}
+.tickbox.on{border-color:var(--verdigris);color:var(--vellum);background:rgba(62,122,107,.15)}
+.counter{
+  position:sticky;bottom:0;margin:0 calc(var(--pad) * -1);padding:16px var(--pad) calc(16px + env(safe-area-inset-bottom));
+  background:linear-gradient(rgba(18,16,15,0),var(--ink) 32%);
+  display:flex;gap:12px;align-items:center;justify-content:space-between;
+}
+
+/* ── assay ──────────────────────────────────────────── */
+.drop{
+  border:1px dashed var(--line);padding:38px 20px;text-align:center;margin-top:22px;
+  cursor:pointer;transition:.2s;
+}
+.drop:hover{border-color:var(--copper)}
+.drop img{max-width:100%;max-height:280px;display:block;margin:0 auto}
+.spinner{
+  width:26px;height:26px;border:1px solid var(--line);border-top-color:var(--copper);
+  border-radius:50%;animation:spin .9s linear infinite;margin:0 auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.found{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+/* ── misc ───────────────────────────────────────────── */
+.empty{text-align:center;padding:56px 0;color:var(--dim)}
+.empty .eyebrow{display:block;margin-bottom:12px}
+.err{border-left:2px solid #A5453B;padding:2px 0 2px 16px;margin-top:18px;color:var(--mercury);font-size:14.5px}
+.pill{
+  font-family:var(--util);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid var(--copper);color:var(--copper);padding:3px 8px;border-radius:2px;
+}
+.fine{font-size:12.5px;color:var(--dim);line-height:1.6;margin-top:22px}
+.install{
+  border:1px solid var(--copper);background:rgba(184,115,51,.08);
+  padding:18px 18px 20px;margin-top:28px;
+}
+.install .eyebrow{display:block;margin-bottom:8px}
+.install p{margin:0 0 14px;font-size:14.5px;color:var(--mercury);line-height:1.55}
+.install ol{margin:0;padding-left:20px;font-size:14px;color:var(--mercury);line-height:1.7}
+.install .x{
+  position:absolute;top:10px;right:12px;background:none;border:0;color:var(--dim);
+  font-family:var(--util);font-size:16px;cursor:pointer;line-height:1;padding:4px;
+}
+:focus-visible{outline:2px solid var(--copper);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="data.js?v=2"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   MIXMIND
+   State, routing and render. No framework, no build step.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Storage can throw on phones (Safari private mode, blocked site data) or hold corrupt
+   values. One bad read used to kill the whole script and leave a blank screen. */
+const store = {
+  get(k, d = null) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+function loadShelf() { try { const a = JSON.parse(store.get("mixmind.shelf", "[]")); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstall = e;
+  if (document.getElementById("app").childElementCount) render();
+});
+window.addEventListener("appinstalled", () => { deferredInstall = null; render(); });
+
+const isStandalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = () =>
+  /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+function installBlock() {
+  if (isStandalone() || store.get("mixmind.hideInstall")) return null;
+
+  const box = $(`<div class="install" style="position:relative"></div>`);
+  const close = $(`<button class="x" aria-label="Dismiss">×</button>`);
+  close.onclick = () => { store.set("mixmind.hideInstall", "1"); render(); };
+  box.appendChild(close);
+
+  if (deferredInstall) {
+    box.appendChild($(`<span class="eyebrow">Install</span>`));
+    box.appendChild($(`<p>Add MixMind to your home screen. It opens full screen and works with no signal.</p>`));
+    const b = $(`<button class="btn solid wide">Install app</button>`);
+    b.onclick = async () => {
+      deferredInstall.prompt();
+      await deferredInstall.userChoice;
+      deferredInstall = null;
+      render();
+    };
+    box.appendChild(b);
+    return box;
+  }
+
+  if (isIOS()) {
+    box.appendChild($(`<span class="eyebrow">Install</span>`));
+    box.appendChild($(`<p>Safari doesn't show an install button. Two taps instead:</p>`));
+    box.appendChild($(`<ol><li>Tap the Share icon at the bottom of Safari</li><li>Scroll down and tap <strong>Add to Home Screen</strong></li></ol>`));
+    return box;
+  }
+
+  if (location.protocol === "file:") {
+    box.appendChild($(`<span class="eyebrow mut">Not installable yet</span>`));
+    box.appendChild($(`<p>You've opened this as a local file. Browsers only offer installation over a web address — put it online and the install button appears here automatically.</p>`));
+    return box;
+  }
+
+  box.appendChild($(`<span class="eyebrow mut">Install</span>`));
+  box.appendChild($(`<p>Use your browser menu and choose <strong>Install</strong> or <strong>Add to Home Screen</strong>.</p>`));
+  return box;
+}
+
+const S = {
+  view: "home",
+  base: null,
+  family: null,
+  profile: null,
+  era: null,
+  drink: null,
+  servings: 1,
+  unit: "ml",
+  shelf: new Set(loadShelf()),
+  assay: { status: "idle", image: null, found: [], error: null },
+  endpoint: store.get("mixmind.endpoint", "")
+};
+
+const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function saveShelf() { store.set("mixmind.shelf", JSON.stringify([...S.shelf])); }
+function go(view, patch = {}) { Object.assign(S, patch, { view }); window.scrollTo(0, 0); render(); }
+
+/* ── matching ──────────────────────────────────────── */
+
+function missingFor(d) {
+  return d.ingredients
+    .map(i => shelfKey(i[0]))
+    .filter(k => !ASSUMED.has(k) && !S.shelf.has(k))
+    .filter((v, i, a) => a.indexOf(v) === i);
+}
+function makeableNow() { return DRINKS.filter(d => missingFor(d).length === 0); }
+function nearMisses() {
+  return DRINKS.map(d => ({ d, m: missingFor(d) }))
+    .filter(x => x.m.length === 1)
+    .sort((a, b) => a.d.name.localeCompare(b.d.name));
+}
+
+function filtered() {
+  return DRINKS.filter(d =>
+    (!S.base || d.base.includes(S.base)) &&
+    (!S.family || d.family === S.family) &&
+    (!S.era || d.era === S.era) &&
+    (!S.profile || d.profile.includes(S.profile))
+  );
+}
+
+/* ── amounts ───────────────────────────────────────── */
+
+function amount(ing, mult) {
+  const [name, ml, text] = ing;
+  if (ml == null) {
+    if (!text) return "—";
+    if (mult === 1) return text;
+    const m = text.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+    if (m) return `${+(parseFloat(m[1]) * mult).toFixed(1)} ${m[2]}`.trim();
+    return `${text} ×${mult}`;
+  }
+  const v = ml * mult;
+  if (S.unit === "oz") {
+    const oz = v / 29.5735;
+    return `${oz < 1 ? oz.toFixed(2) : oz.toFixed(oz % 1 ? 2 : 0)} oz`;
+  }
+  return v >= 1000 ? `${+(v / 1000).toFixed(2)} L` : `${Math.round(v)} ml`;
+}
+
+/* ═══════════════════  VIEWS  ═══════════════════ */
+
+const MARK = `
+<svg class="mark" viewBox="0 0 60 60" aria-hidden="true">
+  <circle class="vessel" cx="30" cy="30" r="28"/>
+  <!-- mixing glass silhouette -->
+  <path class="vessel" d="M20 15 h20 l-2.5 27 a7.5 7.5 0 0 1 -15 0 Z"/>
+  <!-- synapse network inside -->
+  <path class="inner" d="M25 22 L30 30 L35 24 M30 30 L27 38 M30 30 L36 34"/>
+  <circle class="node" cx="25" cy="22" r="1.5"/>
+  <circle class="node" cx="35" cy="24" r="1.5"/>
+  <circle class="node" cx="27" cy="38" r="1.5"/>
+  <circle class="node" cx="36" cy="34" r="1.5"/>
+  <circle class="drop" cx="30" cy="30" r="2.2"/>
+</svg>`;
+
+const BACK = (label, fn) => {
+  const b = $(`<button class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6"/></svg>${esc(label)}</button>`);
+  b.onclick = fn; return b;
+};
+
+function viewHome() {
+  const wrap = $(`<div class="screen"></div>`);
+  const n = makeableNow().length;
+
+  wrap.appendChild($(`
+    <div class="hero">
+      ${MARK}
+      <h1 class="wordmark">MIXMIND</h1>
+      <p class="tagline">Your second brain behind the bar</p>
+      <p class="lede">Ninety drinks, properly specified. Start with the bottle you already own.</p>
+    </div>`));
+
+  /* the dial */
+  const R = 165, cx = 180, cy = 180, inner = 96, outer = 168;
+  const segs = BASES.map((b, i) => {
+    const a0 = (i / BASES.length) * 2 * Math.PI - Math.PI / 2;
+    const a1 = ((i + 1) / BASES.length) * 2 * Math.PI - Math.PI / 2;
+    const p = (r, a) => `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
+    const mid = (a0 + a1) / 2, tr = (inner + outer) / 2;
+    const tx = cx + tr * Math.cos(mid), ty = cy + tr * Math.sin(mid);
+    let deg = mid * 180 / Math.PI;
+    if (deg > 90 || deg < -90) deg += 180;
+    return `<g class="seg" tabindex="0" role="button" aria-label="${esc(b.label)}" data-base="${b.id}">
+      <path d="M ${p(inner, a0)} L ${p(outer, a0)} A ${outer} ${outer} 0 0 1 ${p(outer, a1)} L ${p(inner, a1)} A ${inner} ${inner} 0 0 0 ${p(inner, a0)} Z"/>
+      <text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${deg.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})">${esc(b.label)}</text>
+    </g>`;
+  }).join("");
+
+  const ticks = BASES.map((_, i) => {
+    const a = (i / BASES.length) * 2 * Math.PI - Math.PI / 2;
+    return `<line class="tick" x1="${cx + inner * Math.cos(a)}" y1="${cy + inner * Math.sin(a)}" x2="${cx + outer * Math.cos(a)}" y2="${cy + outer * Math.sin(a)}"/>`;
+  }).join("");
+
+  const dial = $(`
+    <div class="dial-wrap">
+      <svg class="dial" viewBox="0 0 360 360" role="group" aria-label="Choose a base spirit">
+        <circle class="ring" cx="${cx}" cy="${cy}" r="${outer}"/>
+        <circle class="ring" cx="${cx}" cy="${cy}" r="${inner}"/>
+        <circle class="ring" cx="${cx}" cy="${cy}" r="${R + 12}" style="stroke:rgba(184,115,51,.22)"/>
+        ${ticks}${segs}
+      </svg>
+      <div class="dial-core">
+        <div class="n">${DRINKS.length}</div>
+        <div class="l">Choose a base</div>
+      </div>
+    </div>`);
+
+  dial.querySelectorAll(".seg").forEach(g => {
+    const pick = () => go("results", { base: g.dataset.base, family: null, profile: null, era: null });
+    g.onclick = pick;
+    g.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } };
+  });
+  wrap.appendChild(dial);
+
+  /* entry points */
+  const stack = $(`<div class="btn-stack"></div>`);
+  const a = $(`<button class="btn solid wide">Scan your shelf</button>`);
+  a.onclick = () => go("assay");
+  const b = $(`<button class="btn wide">Your shelf · ${n} drink${n === 1 ? "" : "s"} ready now</button>`);
+  b.onclick = () => go("shelf");
+  const c = $(`<button class="btn ghost wide">Host mode — batch for a party</button>`);
+  c.onclick = () => go("host");
+  stack.append(a, b, c);
+  wrap.appendChild(stack);
+
+  const inst = installBlock();
+  if (inst) wrap.appendChild(inst);
+
+  /* collections */
+  const col = $(`<div class="sec"><span class="eyebrow">Or browse by intent</span><div class="rows"></div></div>`);
+  const rows = col.querySelector(".rows");
+  ERAS.forEach((e, i) => {
+    const cnt = DRINKS.filter(d => d.era === e.id).length;
+    const r = $(`<button class="row">
+      <span class="idx">${pad2(i + 1)}</span>
+      <span class="body"><span class="t">${esc(e.label)}</span><span class="s">${esc(e.sub)}</span></span>
+      <span class="meta">${cnt}</span>
+    </button>`);
+    r.onclick = () => go("results", { era: e.id, base: null, family: null, profile: null });
+    rows.appendChild(r);
+  });
+  FAMILIES.forEach((f, i) => {
+    const cnt = DRINKS.filter(d => d.family === f.id).length;
+    const r = $(`<button class="row">
+      <span class="idx">${pad2(ERAS.length + i + 1)}</span>
+      <span class="body"><span class="t">${esc(f.label)}</span><span class="s">${esc(f.sub)}</span></span>
+      <span class="meta">${cnt}</span>
+    </button>`);
+    r.onclick = () => go("results", { family: f.id, base: null, era: null, profile: null });
+    rows.appendChild(r);
+  });
+  wrap.appendChild(col);
+  return wrap;
+}
+
+function viewResults() {
+  const wrap = $(`<div class="screen"></div>`);
+  const list = filtered();
+  const heading =
+    (S.base && BASES.find(b => b.id === S.base).label) ||
+    (S.era && ERAS.find(e => e.id === S.era).label) ||
+    (S.family && FAMILIES.find(f => f.id === S.family).label) || "Everything";
+
+  wrap.appendChild($(`<div style="padding-top:6px">
+    <span class="eyebrow">${list.length} drink${list.length === 1 ? "" : "s"}</span>
+    <h2 style="margin-top:10px">${esc(heading)}</h2>
+  </div>`));
+
+  /* refine */
+  const ref = $(`<div class="sec"><span class="eyebrow mut">Narrow it down</span><div class="chips"></div></div>`);
+  const chips = ref.querySelector(".chips");
+  PROFILES.forEach(p => {
+    if (!list.some(d => d.profile.includes(p)) && S.profile !== p) return;
+    const c = $(`<button class="chip ${S.profile === p ? "on" : ""}">${esc(p.replace("-", " "))}</button>`);
+    c.onclick = () => go("results", { profile: S.profile === p ? null : p });
+    chips.appendChild(c);
+  });
+  wrap.appendChild(ref);
+
+  if (!list.length) {
+    const e = $(`<div class="empty"><span class="eyebrow mut">Nothing here</span><p>That combination has no drinks. Clear the filter and try another angle.</p></div>`);
+    const b = $(`<button class="btn ghost">Clear filters</button>`);
+    b.onclick = () => go("results", { profile: null, family: null });
+    e.appendChild(b); wrap.appendChild(e);
+    return wrap;
+  }
+
+  const rows = $(`<div class="rows" style="margin-top:26px"></div>`);
+  list.forEach((d, i) => {
+    const miss = missingFor(d).length;
+    const tag = S.shelf.size === 0 ? `E${d.effort}` : (miss === 0 ? "Ready" : `−${miss}`);
+    const r = $(`<button class="row">
+      <span class="idx">${pad2(i + 1)}</span>
+      <span class="body"><span class="t">${esc(d.name)}</span><span class="s">${esc(d.note)}</span></span>
+      <span class="meta" ${miss === 0 && S.shelf.size ? 'style="color:var(--copper)"' : ""}>${tag}</span>
+    </button>`);
+    r.onclick = () => go("drink", { drink: d.id, servings: 1 });
+    rows.appendChild(r);
+  });
+  wrap.appendChild(rows);
+  return wrap;
+}
+
+function viewDrink() {
+  const d = DRINKS.find(x => x.id === S.drink);
+  const wrap = $(`<div class="screen"></div>`);
+  const idx = DRINKS.indexOf(d) + 1;
+  const mult = S.servings;
+
+  const label = $(`<div class="label">
+    <div class="spec">
+      <span class="eyebrow">${pad2(idx)} / ${DRINKS.length}</span>
+      <span class="eyebrow q">${esc(d.base.map(b => BASES.find(x => x.id === b).label).join(" · "))} / ${esc(d.family)}</span>
+    </div>
+    <h2>${esc(d.name)}</h2>
+    <p class="note">${esc(d.note)}</p>
+  </div>`);
+  if (d.theatre) label.querySelector(".spec").appendChild($(`<span class="pill">${esc(d.theatre)}</span>`));
+  wrap.appendChild(label);
+
+  wrap.appendChild($(`<div class="stats">
+    <div class="stat"><div class="k">Glass</div><div class="v">${esc(d.glass)}</div></div>
+    <div class="stat"><div class="k">Ice</div><div class="v">${esc(d.ice)}</div></div>
+    <div class="stat"><div class="k">Effort</div><div class="v">${["Two minutes", "Some prep", "A project"][d.effort - 1]}</div></div>
+    <div class="stat"><div class="k">Garnish</div><div class="v">${esc(d.garnish)}</div></div>
+  </div>`));
+
+  /* controls */
+  const bar = $(`<div class="toolbar"></div>`);
+  const sc = $(`<div class="scaler"><button aria-label="Fewer">−</button><span class="n">${mult} serve${mult === 1 ? "" : "s"}</span><button aria-label="More">+</button></div>`);
+  sc.children[0].onclick = () => { S.servings = Math.max(1, S.servings - 1); render(); };
+  sc.children[2].onclick = () => { S.servings = Math.min(40, S.servings + 1); render(); };
+  const u = $(`<button class="chip on">${S.unit}</button>`);
+  u.onclick = () => { S.unit = S.unit === "ml" ? "oz" : "ml"; render(); };
+  bar.append(sc, u);
+  wrap.appendChild(bar);
+
+  /* ingredients */
+  const ing = $(`<div class="sec"><span class="eyebrow">Ingredients</span><table class="ing"><tbody></tbody></table></div>`);
+  const tb = ing.querySelector("tbody");
+  d.ingredients.forEach(i => {
+    const k = shelfKey(i[0]);
+    const have = ASSUMED.has(k) || S.shelf.has(k) || S.shelf.size === 0;
+    tb.appendChild($(`<tr class="${have ? "" : "dim"}"><td>${esc(i[0])}${i[2] && i[1] != null ? ` <span style="color:var(--dim)">${esc(i[2])}</span>` : ""}</td><td class="a">${esc(amount(i, mult))}</td></tr>`));
+  });
+  if (S.shelf.size) {
+    const miss = missingFor(d);
+    if (miss.length) ing.appendChild($(`<p class="fine">Not on your shelf: ${esc(miss.join(", "))}.</p>`));
+  }
+  wrap.appendChild(ing);
+
+  /* method */
+  const m = $(`<div class="sec"><span class="eyebrow">Method</span><ol class="steps"></ol></div>`);
+  d.method.forEach(s => m.querySelector("ol").appendChild($(`<li>${esc(s)}</li>`)));
+  m.appendChild($(`<p class="tip">${esc(d.tip)}</p>`));
+  wrap.appendChild(m);
+
+  if (mult > 1) {
+    wrap.appendChild($(`<p class="fine">Batching note: shake and stir to order regardless of quantity — dilution is per drink. Pre-mix the spirits and syrups only, then finish each glass with citrus, ice and anything carbonated.</p>`));
+  }
+  return wrap;
+}
+
+function viewShelf() {
+  const wrap = $(`<div class="screen"></div>`);
+  wrap.appendChild($(`<div style="padding-top:6px">
+    <span class="eyebrow">Your shelf</span>
+    <h2 style="margin-top:10px">What's in the house</h2>
+    <p class="lede" style="margin:16px 0 0;text-align:left">Tick what you actually own. Everything else in the app reorders itself around it.</p>
+  </div>`));
+
+  SHELF_GROUPS.forEach(g => {
+    const sec = $(`<div class="shelf-group"><span class="eyebrow mut">${esc(g.group)}</span><div class="shelf-items"></div></div>`);
+    const box = sec.querySelector(".shelf-items");
+    [...new Set(g.items)].forEach(it => {
+      const b = $(`<button class="tickbox ${S.shelf.has(it) ? "on" : ""}">${esc(it)}</button>`);
+      b.onclick = () => { S.shelf.has(it) ? S.shelf.delete(it) : S.shelf.add(it); saveShelf(); render(); };
+      box.appendChild(b);
+    });
+    wrap.appendChild(sec);
+  });
+
+  const now = makeableNow(), near = nearMisses();
+  const bar = $(`<div class="counter"></div>`);
+  bar.appendChild($(`<span class="eyebrow">${now.length} ready${near.length ? ` · ${near.length} one bottle away` : ""}</span>`));
+  const b = $(`<button class="btn solid">See them</button>`);
+  b.onclick = () => go("makeable");
+  bar.appendChild(b);
+  wrap.appendChild(bar);
+  return wrap;
+}
+
+function viewMakeable() {
+  const wrap = $(`<div class="screen"></div>`);
+  const now = makeableNow(), near = nearMisses();
+
+  wrap.appendChild($(`<div style="padding-top:6px">
+    <span class="eyebrow">${now.length} drink${now.length === 1 ? "" : "s"}</span>
+    <h2 style="margin-top:10px">Ready right now</h2>
+  </div>`));
+
+  if (!now.length) {
+    wrap.appendChild($(`<div class="empty"><span class="eyebrow mut">Shelf is empty</span><p>Tick a few bottles and this fills up fast. Three spirits and some citrus covers about twenty drinks.</p></div>`));
+  } else {
+    const rows = $(`<div class="rows" style="margin-top:22px"></div>`);
+    now.forEach((d, i) => {
+      const r = $(`<button class="row"><span class="idx">${pad2(i + 1)}</span><span class="body"><span class="t">${esc(d.name)}</span><span class="s">${esc(d.note)}</span></span></button>`);
+      r.onclick = () => go("drink", { drink: d.id, servings: 1 });
+      rows.appendChild(r);
+    });
+    wrap.appendChild(rows);
+  }
+
+  if (near.length) {
+    const sec = $(`<div class="sec"><span class="eyebrow q">One bottle away</span><div class="rows"></div></div>`);
+    const rows = sec.querySelector(".rows");
+    const byBottle = {};
+    near.forEach(x => (byBottle[x.m[0]] = byBottle[x.m[0]] || []).push(x.d));
+    Object.entries(byBottle).sort((a, b) => b[1].length - a[1].length).slice(0, 12).forEach(([bottle, ds], i) => {
+      const r = $(`<button class="row">
+        <span class="idx">${pad2(i + 1)}</span>
+        <span class="body"><span class="t">${esc(bottle)}</span><span class="s">Unlocks ${ds.map(d => d.name).slice(0, 3).join(", ")}${ds.length > 3 ? ` and ${ds.length - 3} more` : ""}</span></span>
+        <span class="meta">+${ds.length}</span>
+      </button>`);
+      r.onclick = () => { S.shelf.add(bottle); saveShelf(); render(); };
+      rows.appendChild(r);
+    });
+    sec.appendChild($(`<p class="fine">Tap a bottle to add it to your shelf and see what opens up.</p>`));
+    wrap.appendChild(sec);
+  }
+  return wrap;
+}
+
+/* ── the Assay: photograph your bottles ────────────── */
+
+function viewAssay() {
+  const wrap = $(`<div class="screen"></div>`);
+  const a = S.assay;
+
+  wrap.appendChild($(`<div style="padding-top:6px">
+    <span class="eyebrow">Scan</span>
+    <h2 style="margin-top:10px">Show it what you own</h2>
+    <p class="lede" style="margin:16px 0 0;text-align:left">Photograph your bottles — the shelf, the trolley, the back of the cupboard. It reads the labels and works out what you can pour.</p>
+  </div>`));
+
+  const input = $(`<input type="file" accept="image/*" hidden>`);
+  const zone = $(`<div class="drop" role="button" tabindex="0"></div>`);
+
+  if (a.status === "reading") {
+    zone.innerHTML = `<div class="spinner"></div><p class="fine" style="margin-top:16px">Reading labels…</p>`;
+  } else if (a.image) {
+    zone.appendChild($(`<img src="${a.image}" alt="Your bottles">`));
+  } else {
+    zone.innerHTML = `<span class="eyebrow mut">Tap to take a photo or choose one</span>
+      <p class="fine" style="margin-top:12px">Get the labels facing the camera. Good light beats a good camera.</p>`;
+  }
+  zone.onclick = () => input.click();
+  zone.onkeydown = e => { if (e.key === "Enter") input.click(); };
+  input.onchange = e => { const f = e.target.files[0]; if (f) readBottles(f); };
+  wrap.append(input, zone);
+
+  if (a.error) wrap.appendChild($(`<p class="err">${esc(a.error)}</p>`));
+
+  if (!S.endpoint || a.error) {
+    const ep = $(`<div class="install" style="margin-top:20px">
+      <span class="eyebrow mut">Scan reader</span>
+      <p>${S.endpoint ? "Reader address:" : "The scan needs your reader address (the Cloudflare Worker URL). Paste it once — it's kept on this phone."}</p>
+      <input type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://mixmind-assay.yourname.workers.dev"
+        style="width:100%;padding:12px;background:var(--ink);color:var(--vellum);border:1px solid var(--line);font:inherit;font-size:16px;border-radius:0">
+      <button class="btn ghost wide" style="margin-top:10px">Save address</button>
+    </div>`);
+    const inp = ep.querySelector("input");
+    inp.value = S.endpoint;
+    ep.querySelector("button").onclick = () => {
+      const v = inp.value.trim();
+      if (v && !/^https:\/\//i.test(v)) { S.assay.error = "The address must start with https://"; render(); return; }
+      S.endpoint = v; store.set("mixmind.endpoint", v); S.assay.error = null; render();
+    };
+    wrap.appendChild(ep);
+  }
+
+  if (a.found.length) {
+    const sec = $(`<div class="sec"><span class="eyebrow">Found ${a.found.length} bottle${a.found.length === 1 ? "" : "s"}</span><div class="found"></div></div>`);
+    const box = sec.querySelector(".found");
+    a.found.forEach(it => {
+      const b = $(`<button class="tickbox ${S.shelf.has(it) ? "on" : ""}">${esc(it)}</button>`);
+      b.onclick = () => { S.shelf.has(it) ? S.shelf.delete(it) : S.shelf.add(it); saveShelf(); render(); };
+      box.appendChild(b);
+    });
+    sec.appendChild($(`<p class="fine">Tap to correct anything it got wrong before adding. It reads labels, not minds.</p>`));
+    const go2 = $(`<button class="btn solid wide" style="margin-top:20px">See what you can make</button>`);
+    go2.onclick = () => { a.found.forEach(i => S.shelf.add(i)); saveShelf(); go("makeable"); };
+    sec.appendChild(go2);
+    wrap.appendChild(sec);
+  }
+
+  const man = $(`<button class="btn ghost wide" style="margin-top:26px">Or tick your bottles by hand</button>`);
+  man.onclick = () => go("shelf");
+  wrap.appendChild(man);
+  return wrap;
+}
+
+async function readBottles(file) {
+  S.assay = { status: "reading", image: null, found: [], error: null };
+  render();
+
+  if (!S.endpoint) {
+    S.assay = { status: "idle", image: null, found: [], error: "Add your reader address below first, or tick your bottles by hand." };
+    render(); return;
+  }
+
+  /* Phone photos are 4–12 MB, often HEIC. The API rejects both. Redraw to a ≤1600px JPEG. */
+  const b64 = await new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        res(c.toDataURL("image/jpeg", 0.85));
+      } catch (e) { rej(new Error("Could not read that photo.")); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Could not read that photo. Try a different one.")); };
+    img.src = url;
+  }).catch(e => { S.assay = { status: "idle", image: null, found: [], error: e.message }; render(); return null; });
+  if (!b64) return;
+
+  S.assay.image = b64;
+  const data = b64.split(",")[1];
+  const media = "image/jpeg";
+  const known = SHELF_GROUPS.flatMap(g => g.items);
+
+  const prompt = `You are looking at a photograph of someone's drinks shelf.
+
+List every alcoholic bottle, liqueur, mixer, syrup and bitters you can identify from the labels.
+
+Then map each one to the closest entry in this list of known ingredients:
+${known.join(", ")}
+
+Rules:
+- Only include an entry if you can actually see evidence for it in the image. Do not guess at what a home bar usually contains.
+- If a bottle is clearly a spirit but you cannot read the brand, still map it by category (a clear bottle labelled gin maps to "Gin").
+- If nothing in the list fits a bottle you can see, leave it out.
+
+Respond with ONLY a JSON array of matched strings from the list, no preamble, no markdown fences. Example: ["Gin","Campari","Sweet vermouth"]`;
+
+  try {
+    const res = await fetch(S.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: media, data } },
+            { type: "text", text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!res.ok) throw new Error(`The reader returned ${res.status}. Check the reader address below, or tick your bottles by hand.`);
+    const json = await res.json();
+    const text = (json.content || []).map(c => c.text || "").join("\n").replace(/```json|```/g, "").trim();
+    const arr = JSON.parse(text);
+    const found = arr.filter(x => known.includes(x));
+    S.assay = {
+      status: "done", image: b64, found,
+      error: found.length ? null : "Nothing recognisable in that photo. Try again with the labels facing the camera, or tick your bottles by hand."
+    };
+  } catch (e) {
+    const msg = e instanceof TypeError ? "Could not reach the reader. Check your signal and the reader address below." : e.message;
+    S.assay = { status: "idle", image: b64, found: [], error: msg };
+  }
+  render();
+}
+
+/* ── host mode ─────────────────────────────────────── */
+
+function viewHost() {
+  const wrap = $(`<div class="screen"></div>`);
+  S.guests = S.guests || 10;
+  S.hostBase = S.hostBase === undefined ? null : S.hostBase;
+  S.menu = S.menu || new Set();
+
+  wrap.appendChild($(`<div style="padding-top:6px">
+    <span class="eyebrow">Host mode</span>
+    <h2 style="margin-top:10px">Work out the quantities</h2>
+    <p class="lede" style="margin:16px 0 0;text-align:left">Pick the guest count and the drinks you're offering. It returns the shopping list, the batch sizes and the ice you'll actually need.</p>
+  </div>`));
+
+  const sc = $(`<div class="scaler" style="margin-top:24px"><button>−</button><span class="n">${S.guests} guests</span><button>+</button></div>`);
+  sc.children[0].onclick = () => { S.guests = Math.max(2, S.guests - 2); render(); };
+  sc.children[2].onclick = () => { S.guests = Math.min(120, S.guests + 2); render(); };
+  wrap.appendChild(sc);
+
+  const sec = $(`<div class="sec"><span class="eyebrow mut">Choose your menu — four to six is plenty</span><div class="chips"></div><div class="shelf-items"></div></div>`);
+  const fchips = sec.querySelector(".chips");
+  [{ id: null, label: "All" }, ...BASES].forEach(b => {
+    const c = $(`<button class="chip ${S.hostBase === b.id ? "on" : ""}">${esc(b.label)}</button>`);
+    c.onclick = () => { S.hostBase = b.id; render(); };
+    fchips.appendChild(c);
+  });
+  const box = sec.querySelector(".shelf-items");
+  DRINKS.filter(d => d.effort <= 2 && (!S.hostBase || d.base.includes(S.hostBase))).forEach(d => {
+    const b = $(`<button class="tickbox ${S.menu.has(d.id) ? "on" : ""}">${esc(d.name)}</button>`);
+    b.onclick = () => { S.menu.has(d.id) ? S.menu.delete(d.id) : S.menu.add(d.id); render(); };
+    box.appendChild(b);
+  });
+  if (S.hostBase) {
+    [...S.menu].map(id => DRINKS.find(d => d.id === id))
+      .filter(d => d && !d.base.includes(S.hostBase))
+      .forEach(d => {
+        const b = $(`<button class="tickbox on">${esc(d.name)}</button>`);
+        b.onclick = () => { S.menu.delete(d.id); render(); };
+        box.appendChild(b);
+      });
+  }
+  wrap.appendChild(sec);
+
+  if (S.menu.size) {
+    const drinks = [...S.menu].map(id => DRINKS.find(d => d.id === id));
+    const total = Math.ceil(S.guests * 2.5);
+    const per = Math.ceil(total / drinks.length);
+
+    wrap.appendChild($(`<div class="sec">
+      <span class="eyebrow">The numbers</span>
+      <div class="stats">
+        <div class="stat"><div class="k">Drinks to plan for</div><div class="v">${total}</div></div>
+        <div class="stat"><div class="k">Per recipe</div><div class="v">${per} serves</div></div>
+        <div class="stat"><div class="k">Ice</div><div class="v">${Math.ceil(S.guests * 2)} kg</div></div>
+        <div class="stat"><div class="k">Glassware</div><div class="v">${Math.ceil(S.guests * 1.5)} glasses</div></div>
+      </div>
+      <p class="fine">Two and a half drinks a head over an evening, and 2 kg of ice per person. Ice is the single most common thing hosts run short of — buy more than feels sensible.</p>
+    </div>`));
+
+    /* shopping list */
+    const tally = {};
+    drinks.forEach(d => d.ingredients.forEach(([name, ml, text]) => {
+      const k = shelfKey(name);
+      if (ASSUMED.has(k)) return;
+      if (ml == null) { tally[k] = tally[k] || { text: true, n: 0 }; tally[k].n += per; return; }
+      tally[k] = tally[k] || { ml: 0 };
+      tally[k].ml = (tally[k].ml || 0) + ml * per;
+    }));
+
+    const sl = $(`<div class="sec"><span class="eyebrow">Shopping list</span><table class="ing"><tbody></tbody></table></div>`);
+    const tb = sl.querySelector("tbody");
+    Object.entries(tally).sort((a, b) => (b[1].ml || 0) - (a[1].ml || 0)).forEach(([name, v]) => {
+      let amt;
+      if (v.ml) {
+        amt = v.ml >= 1000 ? `${(v.ml / 1000).toFixed(1)} L` : `${Math.round(v.ml)} ml`;
+        if (v.ml > 700) amt += ` · ${Math.ceil(v.ml / 700)} bottles`;
+      } else amt = `${v.n} serves`;
+      tb.appendChild($(`<tr><td>${esc(name)}</td><td class="a">${esc(amt)}</td></tr>`));
+    });
+    sl.appendChild($(`<p class="fine">Quantities assume a 700 ml bottle. Add a spare of anything you'd be annoyed to run out of at 11pm.</p>`));
+    wrap.appendChild(sl);
+
+    /* prep order */
+    const prep = $(`<div class="sec"><span class="eyebrow">Before anyone arrives</span><ol class="steps"></ol></div>`);
+    const ol = prep.querySelector("ol");
+    [
+      "The day before: make sugar syrup. Equal parts caster sugar and hot water, stirred until clear. Make a small 2:1 batch separately if anything on the menu calls for rich syrup.",
+      `The afternoon: squeeze the citrus. Fresh only — bottled ruins every sour on the list. You need roughly ${Math.ceil(total * 0.025 * 10) / 10} litres in total.`,
+      "Batch anything stirred and spirit-only — Negronis, Manhattans, Boulevardiers — into bottles and refrigerate. Pour 90 ml over ice on demand.",
+      "Chill every coupe and flute in the freezer. Warm glass is the fastest way to ruin a good drink.",
+      "Set the zero-proof drinks out in the same glassware, at the same time. Nobody should have to ask for them."
+    ].forEach(s => ol.appendChild($(`<li>${esc(s)}</li>`)));
+    wrap.appendChild(prep);
+  }
+  return wrap;
+}
+
+/* ═══════════════════  ROUTER  ═══════════════════ */
+
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  if (S.view !== "home") {
+    const bar = $(`<div class="topbar"></div>`);
+    const map = {
+      results: ["Home", () => go("home")],
+      drink: ["Back", () => go(S.base || S.era || S.family ? "results" : "home")],
+      shelf: ["Home", () => go("home")],
+      makeable: ["Shelf", () => go("shelf")],
+      assay: ["Home", () => go("home")],
+      host: ["Home", () => go("home")]
+    };
+    const [l, fn] = map[S.view] || ["Home", () => go("home")];
+    bar.appendChild(BACK(l, fn));
+    app.appendChild(bar);
+  }
+
+  const views = {
+    home: viewHome, results: viewResults, drink: viewDrink,
+    shelf: viewShelf, makeable: viewMakeable, assay: viewAssay, host: viewHost
+  };
+  app.appendChild((views[S.view] || viewHome)());
+}
+
+if (typeof DRINKS === "undefined") {
+  document.getElementById("app").innerHTML = '<div style="padding:40px 20px;text-align:center"><p>MixMind could not load its recipes.</p><button onclick="(async()=>{try{const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)));const r=await navigator.serviceWorker.getRegistrations();await Promise.all(r.map(x=>x.unregister()))}catch(e){}location.reload()})()" style="padding:12px 20px">Reset and reload</button></div>';
+} else {
+  render();
+}
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
